@@ -1,6 +1,9 @@
 #!/bin/bash
+# echo $0 $1 $2
 
-cd "/mnt/c/Users/danie/Documents/Research/Git Files/DDSL/experiments/exp1_airfoil/data/"
+cd $1
+
+mkdir -p $2/DatFiles 
 
 for file in ./*
 
@@ -10,11 +13,11 @@ cd ./$file
 
 airfoil=${PWD##*/}
 
-cp ./seligdatfile /mnt/c/Users/danie/Desktop/Airfoils/DatFiles/"${airfoil}_dat"
+cp ./seligdatfile $2/DatFiles/"${airfoil}_dat"
 
 echo "Processing airfoil: ${airfoil}"
 
-echo ${airfoil} >> /mnt/c/Users/danie/Desktop/Airfoils/AirfoilList.txt
+echo ${airfoil} >> $2/AirfoilList.txt
 
 cd ..
 
