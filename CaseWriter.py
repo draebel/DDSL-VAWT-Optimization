@@ -15,7 +15,7 @@ airfoil_list = open("AirfoilList.txt", "r")
 
 with open("CaseList.txt", "w+") as f:
     writer = csv.writer(f)
-    writer.writerow(["Airfoil", "Tip Speed Ratio (TSR)", "Angle of Attack (theta_0)", "Angular Speed (w)"])
+    writer.writerow(["Airfoil", "TSR", "AoA", "AngularSpeed"])
 
     for i in range(0,NUM_CASES):
         

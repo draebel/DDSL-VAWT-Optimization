@@ -19,7 +19,7 @@ failed = True
 
 with open("FakeTrainingData.txt", "w+") as f:
     writer = csv.writer(f)
-    writer.writerow(["Airfoil", "Theta", "Tip Speed Ratio (TSR)", "Angle of Attack (theta_0)", "Torque"])
+    writer.writerow(["Airfoil", "Theta", "TSR", "AoA", "Torque"])
 
     for i in range(0,NUM_CASES):
 
