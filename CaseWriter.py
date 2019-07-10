@@ -13,7 +13,7 @@ AOA_RANGE = [-10, 10] #AoA ranges continuously from -10 to 10
 
 with open("CaseList.txt", "w+") as f:
     writer = csv.writer(f)
-    writer.writerow(["Airfoil", "TSR", "AoA", "AngularSpeed"])
+    writer.writerow(["Name", "TSR", "AoA", "AngularSpeed"])
 
     for i in range(0,NUM_CASES):
         
