@@ -18,7 +18,7 @@ dataPoints = 1
 
 with open("SinWaveFakeTrainingData.csv", "w+") as f:
     writer = csv.writer(f)
-    writer.writerow(["Airfoil", "Theta", "TSR", "AoA", "Torque"])
+    writer.writerow(["Name", "Theta", "TSR", "AoA", "Torque"])
 
     for i in range(0,NUM_CASES):
 

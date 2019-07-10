@@ -54,10 +54,10 @@ def process_airfoil_data(directory='csv_data'):
     print('Creating dataframe...')
 
     # Initialize dataframe
-    airfoil_df=pd.DataFrame(columns=['Airfoil','Directory','Theta','TSR','AoA','Torque'])
+    airfoil_df=pd.DataFrame(columns=['Name','Directory','Theta','TSR','AoA','Torque'])
 
     # Add data lists to dataframe
-    airfoil_df['Airfoil']=airfoil_list
+    airfoil_df['Name']=airfoil_list
     airfoil_df['Directory']=afdir_list
     airfoil_df['Theta']=theta_list
     airfoil_df['TSR']=tsr_list
@@ -73,7 +73,7 @@ def process_airfoil_data(directory='csv_data'):
 # Fix data types in dataframe
 def fix_df_dtypes(airfoil_df, datatypes=['str', 'str', 'float', 'float', 'float', 'float']):
     # Fix data types
-    airfoil_df['Airfoil']=airfoil_df['Airfoil'].astype(datatypes[0])
+    airfoil_df['Name']=airfoil_df['Name'].astype(datatypes[0])
     airfoil_df['Directory']=airfoil_df['Directory'].astype(datatypes[1])
     airfoil_df['Theta']=airfoil_df['Theta'].astype(datatypes[2])
     airfoil_df['TSR']=airfoil_df['TSR'].astype(datatypes[3])
