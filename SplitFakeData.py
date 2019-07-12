@@ -1,7 +1,7 @@
 import csv
 import os
 
-filename = "FakeTrainingData.txt"
+filename = "SinWaveFakeTrainingData.csv"
 os.mkdir("./csv_data")
 
 with open(filename, "r") as f:
