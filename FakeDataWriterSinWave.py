@@ -8,8 +8,8 @@ ROUND_DIGITS = 5 #Round to this many decimal places
 NUM_CASES = int(input("Number of Test Airfoils: ")) #Number of cases to choose
 U_INF = 10
 R = 0.75
-TSR_RANGE = [0.5, 6] #TSR ranges continuously from 0.25 to 6 CHANGE BACK WHEN DONE
-AOA_RANGE = [-10, 10] #AoA ranges continuously from -10 to 10 CHANGE BACK WHEN DONE
+TSR_RANGE = [0.5, 1] #TSR ranges continuously from 0.25 to 6 CHANGE BACK WHEN DONE WITH TESTS
+AOA_RANGE = [-0.5, 0.5] #AoA ranges continuously from -10 to 10 CHANGE BACK WHEN DONE WITH TESTS
 
 FAKE_TORQUE_RANGE = [0, 5] #Range to sample fake torgue magnitueds from
 
@@ -37,16 +37,16 @@ with open("SinWaveFakeTrainingData.csv", "w+") as f:
 
         aoa = round(rn.random()*(AOA_RANGE[1] - AOA_RANGE[0]) + AOA_RANGE[0], ROUND_DIGITS)
 
-##        if i == (ceil(NUM_CASES / 2) - 1):
-##
-##            torque_mag = 10            
-##            optimFoil = airfoil
-##            
-##        else:
-##
-##            torque_mag = round(rn.random()*(FAKE_TORQUE_RANGE[1] - FAKE_TORQUE_RANGE[0]) + FAKE_TORQUE_RANGE[0], ROUND_DIGITS)
+        if i == (ceil(NUM_CASES / 2) - 1):
+
+            torque_mag = 20            
+            optimFoil = airfoil
+            
+        else:
+
+            torque_mag = round(rn.random()*(FAKE_TORQUE_RANGE[1] - FAKE_TORQUE_RANGE[0]) + FAKE_TORQUE_RANGE[0], ROUND_DIGITS)
                 
-        torque_mag = round(rn.random()*(FAKE_TORQUE_RANGE[1] - FAKE_TORQUE_RANGE[0]) + FAKE_TORQUE_RANGE[0], ROUND_DIGITS)
+##        torque_mag = round(rn.random()*(FAKE_TORQUE_RANGE[1] - FAKE_TORQUE_RANGE[0]) + FAKE_TORQUE_RANGE[0], ROUND_DIGITS)
 
         for j in range(0,360):
 
@@ -59,4 +59,4 @@ with open("SinWaveFakeTrainingData.csv", "w+") as f:
             if dataPoints % 1000 == 0:
                 print("Created {} fake data points.".format(dataPoints))
 
-#print("Done! Should optimize towards airfoil " + optimFoil + ".")
+print("Done! Should optimize towards airfoil " + optimFoil + " (Case " + str(ceil(NUM_CASES / 2)) + ").")
