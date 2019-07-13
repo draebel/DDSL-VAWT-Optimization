@@ -8,8 +8,9 @@ ROUND_DIGITS = 5 #Round to this many decimal places
 NUM_CASES = int(input("Number of Test Airfoils: ")) #Number of cases to choose
 U_INF = 10
 R = 0.75
-TSR_RANGE = [0.25, 6] #TSR ranges continuously from 0.25 to 6
-AOA_RANGE = [-10, 10] #AoA ranges continuously from -10 to 10
+TSR_RANGE = [0.5, 6] #TSR ranges continuously from 0.25 to 6 CHANGE BACK WHEN DONE
+AOA_RANGE = [-10, 10] #AoA ranges continuously from -10 to 10 CHANGE BACK WHEN DONE
+
 FAKE_TORQUE_RANGE = [0, 5] #Range to sample fake torgue magnitueds from
 
 airfoil_list = open("AirfoilList.txt", "r")
@@ -47,7 +48,7 @@ with open("SinWaveFakeTrainingData.csv", "w+") as f:
                 
         torque_mag = round(rn.random()*(FAKE_TORQUE_RANGE[1] - FAKE_TORQUE_RANGE[0]) + FAKE_TORQUE_RANGE[0], ROUND_DIGITS)
 
-        for j in range(0,360):
+        for j in range(0,180):
 
             torque = (round(torque_mag * cos(j * 3.1416 / 180), ROUND_DIGITS)) ** 2 #Squared because otherwise total torque would always be zero
             
