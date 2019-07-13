@@ -48,7 +48,7 @@ with open("SinWaveFakeTrainingData.csv", "w+") as f:
                 
         torque_mag = round(rn.random()*(FAKE_TORQUE_RANGE[1] - FAKE_TORQUE_RANGE[0]) + FAKE_TORQUE_RANGE[0], ROUND_DIGITS)
 
-        for j in range(0,180):
+        for j in range(0,360):
 
             torque = (round(torque_mag * cos(j * 3.1416 / 180), ROUND_DIGITS)) ** 2 #Squared because otherwise total torque would always be zero
             
