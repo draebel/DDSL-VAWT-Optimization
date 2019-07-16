@@ -2,8 +2,6 @@
 % gmsh ./[GeomName] -3 -smooth 2 -clmax .5 -clscale .5 -o ./[MeshName.msh]
 % gmsh ./GeomFixed.txt -3 -smooth 2 -clmax .5 -clscale .5 -o ./GeomFixed
 
-%% Parameters
-
 %Create a Mesh File for a Turbine Up to Four Blades
 
 list = readtable('CaseList.txt');
@@ -27,7 +25,7 @@ filename = strcat(datafile(1:end-3), num2str(AoA), '.geo'); %Geometry Filename t
 
 fprintf(strcat('Filename will be "',filename,'"\n'));
 
-
+%% Parameters
 
 c = 0.1; %Chord Length [m]
 D = 2*0.75; %Rotor Diameter [m]
