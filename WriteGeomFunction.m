@@ -6,15 +6,24 @@
 
 %Create a Mesh File for a Turbine Up to Four Blades
 
+list = readtable('CaseList.txt');
+len = size(list,1);
+for i = 1:len
+    fprintf(strcat("Airfoil: ", list.Name{i}, ", AoA: %f"),list.AoA(i));
+    WriteGeom(list.Name{i}, list.AoA(i));
+end
 
-function [] = WriteGeomFunction(datafile, AoA)
+
+
+
+function [] = WriteGeom(datafile, AoA)
 close all;
 clc;
 fprintf('Beginning to Write Geometry File.\n');
 
 %datafile = 'NACA 0012 Rounded.txt'; %Coordinate Filename to import airfoil data from
 
-filename = strcat(datafile(1:end-3), int2str(AoA), '.geo'); %Geometry Filename to export to
+filename = strcat(datafile(1:end-3), num2str(AoA), '.geo'); %Geometry Filename to export to
 
 fprintf(strcat('Filename will be "',filename,'"\n'));
 
@@ -231,25 +240,25 @@ fclose(fid);
 
 %% Plot
 
-fprintf('Plotting Geometry...\n');
-
-for i = 1:nBlades
-    plot(bladeCoord{i}(1,:),bladeCoord{i}(2,:));
-    hold on;
-end
-
-plot(boxPoints(:,1),boxPoints(:,2));
-
-circleX = linspace(-TurbineDiameter/2,TurbineDiameter/2,100);
-circleY = zeros(1,length(circleX));
-for i = 1:length(circleX)
-    circleY(i) = sqrt((TurbineDiameter/2)^2 - (circleX(i))^2);
-end
-plot(circleX,circleY,circleX,-circleY);
-
-axis([boxPoints(1,1),boxPoints(4,1),boxPoints(1,2),boxPoints(2,2)]);
-daspect([1 1 1]);
-hold off;
+% fprintf('Plotting Geometry...\n');
+% 
+% for i = 1:nBlades
+%     plot(bladeCoord{i}(1,:),bladeCoord{i}(2,:));
+%     hold on;
+% end
+% 
+% plot(boxPoints(:,1),boxPoints(:,2));
+% 
+% circleX = linspace(-TurbineDiameter/2,TurbineDiameter/2,100);
+% circleY = zeros(1,length(circleX));
+% for i = 1:length(circleX)
+%     circleY(i) = sqrt((TurbineDiameter/2)^2 - (circleX(i))^2);
+% end
+% plot(circleX,circleY,circleX,-circleY);
+% 
+% axis([boxPoints(1,1),boxPoints(4,1),boxPoints(1,2),boxPoints(2,2)]);
+% daspect([1 1 1]);
+% hold off;
 
 %% Mesh
 
