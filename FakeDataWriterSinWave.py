@@ -39,7 +39,7 @@ with open("SinWaveFakeTrainingData.csv", "w+") as f:
 
         if i == (ceil(NUM_CASES / 2) - 1):
 
-            torque_mag = 20            
+            torque_mag = 8            
             optimFoil = airfoil
             
         else:
