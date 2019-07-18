@@ -2,270 +2,184 @@
 % gmsh ./[GeomName] -3 -smooth 2 -clmax .5 -clscale .5 -o ./[MeshName.msh]
 % gmsh ./GeomFixed.txt -3 -smooth 2 -clmax .5 -clscale .5 -o ./GeomFixed
 
-%% Parameters
 
-%Create a Mesh File for a Turbine Up to Four Blades
+%Create a Mesh File for a Turbine for VAWT Optimization
+%format filename output like e434_tsr_3.5_aoa_-10.geo
 
-list = readtable('CaseList.txt');
+list = readtable('CaseList.csv');
+al_table = readtable('ArcLengths.csv');
 len = size(list,1);
-for i = 1:len
-    fprintf(strcat("Airfoil: ", list.Name{i}, ", AoA: %f"),list.AoA(i));
-    WriteGeom(list.Name{i}, list.AoA(i));
+for i = 1:3
+    al_row = strcmp(al_table.Name, list.Name{i}) == 1;
+    arc_length = al_table.ArcLength(al_row);
+    fprintf(strcat("Airfoil: ", list.Name{i}, ", TSR: %f, AoA: %f"), list.TSR(i), list.AoA(i));
+    WriteGeom(strcat('./cfd_control_points/', list.Name{i},'.csv'), list.TSR(i), list.AoA(i), arc_length);
 end
 
 
+function [] = WriteGeom(datafile, TSR, AoA, ArcLength)
 
-
-function [] = WriteGeom(datafile, AoA)
 close all;
 clc;
 fprintf('Beginning to Write Geometry File.\n');
 
-%datafile = 'NACA 0012 Rounded.txt'; %Coordinate Filename to import airfoil data from
-
-filename = strcat(datafile(1:end-3), num2str(AoA), '.geo'); %Geometry Filename to export to
+filename = strcat(datafile(22:end-4), '_tsr_', num2str(TSR), '_aoa_', num2str(AoA), '.geo'); %Geometry Filename to export to
 
 fprintf(strcat('Filename will be "',filename,'"\n'));
 
+%% Parameters
 
-
-c = 0.1; %Chord Length [m]
+%TODO: Determine xshift
+c = 0.5; %Chord Length [m]
 D = 2*0.75; %Rotor Diameter [m]
-beta = AoA; %Blade Pitch Angle (+ is leading edge inward) [degrees]
+beta = -1*AoA; %Blade Pitch Angle (+ is leading edge inward) [degrees]
 xshift = 0.25*c; %Distance from leading edge to mounting point [m]
-nBlades = 2; %Number of Blades
 direction = 1; %Rotation Direction (CCW = 1, CW = -1)
-TurbineDiameter = 1.02*D; %Diameter of Turbine Mesh [m]
-BoxShape = [7, 4, 0, 0]; %Shift in box center (width, height, turbine shift from center x, y) [m]
-BladeNodes = 540; %Number of Mesh Nodes on Blade Surface 
-CircleNodes = 1050; %Number of Mesh Nodes on Circle
-SplinesPerBlade = 4; %number of splines to split blades into (must be > 2)
 mesh = false; %Mesh with gmsh when done
-optimize = false; %DEPRICATED: Eliminates repeated elements in the turbine coordinates. Turn on if spline cannot be created. This process is VERY slow for large amounts of points!
+makefig = false; %Plot figure when complete
 
-%% Create .txt File
-
-if nBlades > 4
-    errror('Cannot create file for a turbine with more than four blades!');
-end
+%% Create .geo File
 
 %Prepare Blade Coordinates
 fprintf('Preparing Turbine Coordinates...\n');
-bladeCoord = bladePrepare(c,D,beta,datafile,xshift,nBlades,direction);
-
-
-
-if optimize
-    %eliminate repeated elements
-    fprintf('Optimizing Coordinates (this may take a while)...\n');
-    for j = 0:nBlades-1
-        i = 1;
-        while i <= size(bladeCoord{j+1},2)
-            k=1;
-            while k <= size(bladeCoord{j+1},2)
-                if i ~= k
-                    if bladeCoord{j+1}(1,i) == bladeCoord{j+1}(1,k)
-                        if bladeCoord{j+1}(2,i) == bladeCoord{j+1}(2,k)
-                            bladeCoord{j+1}(:,k) = [];
-                            k = k-1;
-                        end
-                    end
-                end
-                k = k+1;
-            end
-            i = i+1;
-        end
-    end
-end
+bladeCoord = bladePrepare(c,D,beta,datafile,xshift,2,direction);
 
 fprintf('Writing GMSH File...\n');
 
 %Create Header
-fid = fopen(filename,'w');
+fid = fopen(strcat('./geo_files/', filename),'w');
 fprintf(fid,'SetFactory("OpenCASCADE");\r\n\r\n');
 
-lastPoint = 0;
 
-for k = 1:nBlades
-    numPoints = size(bladeCoord{k},2);
+%ASSUMING NNUMBER OF POINTS PER DATA FILE IS 10000
+numPoints = size(bladeCoord{1},2);
 
-    %Write Blade Coordinates
-    splineEnd = zeros(1,SplinesPerBlade);
-    if length(splineEnd) > 1
-        for i = 1:length(splineEnd)
-            splineEnd(i) = ceil((numPoints/SplinesPerBlade*(i))+lastPoint);
-        end
-    end
-    splineEnd = [1+lastPoint, splineEnd, 1+lastPoint];
-    for j = 1:numPoints
-        fprintf(fid,'Point(%d) = {%.6f, %.6f, 0, 1.0};\r\n',j+lastPoint,bladeCoord{k}(1,j),bladeCoord{k}(2,j));
-    end
-    for j = 1:SplinesPerBlade
-        fprintf(fid,'Spline(%d) = {',SplinesPerBlade*(k-1)+j);
-
-        %fprintf(fid,'%d:%d, ',splineEnd(j)+numPoints*i,splineEnd(j+1)+numPoints*i-1);
-
-        %fprintf(fid,'%d, ',splineEnd(j)+numPoints*i:splineEnd(j+1)+numPoints*i-1);
-        if j == SplinesPerBlade
-            fprintf(fid,'%d:%d, %d};\r\n',splineEnd(j),splineEnd(SplinesPerBlade+1),splineEnd(1));
-
-            %fprintf(fid,sprintf('%d, %d};\r\n',splineEnd(SplinesPerBlade+1)+numPoints*i,splineEnd(1)+numPoints*i));
-        else
-            fprintf(fid,'%d:%d};\r\n',splineEnd(j),splineEnd(j+1));
-
-            %fprintf(fid,sprintf('%d};\r\n',splineEnd(j+1)+numPoints*i));
-        end
-    end
-    lastPoint = lastPoint + numPoints;
+% Write Blade Coordinates
+for j = 1:numPoints
+    fprintf(fid,'Point(%d) = {%.6f, %.6f, 0, 1.0};\r\n',j,bladeCoord{1}(1,j),bladeCoord{1}(2,j));
+end
+for j = 1:numPoints
+    fprintf(fid,'Point(%d) = {%.6f, %.6f, 0, 1.0};\r\n',j+numPoints,bladeCoord{2}(1,j),bladeCoord{2}(2,j));
 end
 
-fprintf(fid,'//+\r\n');
-
-%Create Line Loops for Blades
-for i = 0:nBlades-1
-    fprintf(fid,'Line Loop(%d) = {',i+1);
-    fprintf(fid,sprintf('%d, ',SplinesPerBlade*i+1:SplinesPerBlade*(i+1)-1));
-    fprintf(fid,'%d};\r\n',SplinesPerBlade*(i+1));
-end
-
-fprintf(fid,'//+\r\n');
+% Write Splines
+fprintf(fid, '\r\n// Lines: first blade (splines 1-4)\r\n');
+fprintf(fid, 'Spline(1) = {8750:10000,1:1250};\r\n');
+fprintf(fid, 'Spline(2) = {1250:3750};\r\n');
+fprintf(fid, 'Spline(3) = {3750:6250};\r\n');
+fprintf(fid, 'Spline(4) = {6250:8750};\r\n\r\n');
+fprintf(fid, '// Lines: second blade (splines 5-8)\r\n');
+fprintf(fid, 'Spline(5) = {18750:20000,10001:11250};\r\n');
+fprintf(fid, 'Spline(6) = {11250:13750};\r\n');
+fprintf(fid, 'Spline(7) = {13750:16250};\r\n');
+fprintf(fid, 'Spline(8) = {16250:18750};\r\n\r\n');
 
 %Create Outer Box
-corn1 = numPoints*nBlades+1;
-corn2 = numPoints*nBlades+2;
-corn3 = numPoints*nBlades+3;
-corn4 = numPoints*nBlades+4;
-boxPoints = [-BoxShape(1)/2-BoxShape(3),-BoxShape(2)/2-BoxShape(4);-BoxShape(1)/2-BoxShape(3),BoxShape(2)/2-BoxShape(4);BoxShape(1)/2-BoxShape(3),BoxShape(2)/2-BoxShape(4);BoxShape(1)/2-BoxShape(3),-BoxShape(2)/2-BoxShape(4)];
-fprintf(fid,'Point(%d) = {%.4f, %.4f, 0, 1.0};\r\n',corn1,-BoxShape(1)/2-BoxShape(3),-BoxShape(2)/2-BoxShape(4));
-fprintf(fid,'Point(%d) = {%.4f, %.4f, 0, 1.0};\r\n',corn2,-BoxShape(1)/2-BoxShape(3),BoxShape(2)/2-BoxShape(4));
-fprintf(fid,'Point(%d) = {%.4f, %.4f, 0, 1.0};\r\n',corn3,BoxShape(1)/2-BoxShape(3),BoxShape(2)/2-BoxShape(4));
-fprintf(fid,'Point(%d) = {%.4f, %.4f, 0, 1.0};\r\n',corn4,BoxShape(1)/2-BoxShape(3),-BoxShape(2)/2-BoxShape(4));
+fprintf(fid,'// Outer domain (points 20001-4 and lines)\r\n');
+fprintf(fid,'Point(20001) = {-15.00000000, -8.00000000, 0, 1.0};\r\n');
+fprintf(fid,'Point(20002) = {-15.00000000, 8.00000000, 0, 1.0};\r\n');
+fprintf(fid,'Point(20003) = {24.00000000, 8.00000000, 0, 1.0};\r\n');
+fprintf(fid,'Point(20004) = {24.00000000, -8.00000000, 0, 1.0};\r\n');
+fprintf(fid,'Line(11) = {20001, 20002};\r\n');
+fprintf(fid,'Line(12) = {20002, 20003};\r\n');
+fprintf(fid,'Line(13) = {20003, 20004};\r\n');
+fprintf(fid,'Line(14) = {20001, 20004};\r\n\r\n');
 
-fprintf(fid,'//+\r\n');
+% Create Circles
+fprintf(fid,'// Interface (between moving and stationary domain) (circles)\r\n');
+fprintf(fid,'Circle(9) = {0, 0, 0, 0.80000000, 0, 2*Pi};\r\n');
+fprintf(fid,'Circle(10) = {0, 0, 0, 0.80000000, 0, 2*Pi};\r\n\r\n');
 
-fprintf(fid,'Line(110) = {%d, %d};\r\n',corn1,corn2);
-fprintf(fid,'Line(111) = {%d, %d};\r\n',corn2,corn3);
-fprintf(fid,'Line(112) = {%d, %d};\r\n',corn3,corn4);
-fprintf(fid,'Line(113) = {%d, %d};\r\n',corn1,corn4);
+%Create Line Loops
+fprintf(fid,'// Loops collect Lines/Splines/etc (blade1, blade2, domain, first circle)\r\n');
+fprintf(fid,'Line Loop(1) = {1,2,3,4};\r\n');
+fprintf(fid,'Line Loop(2) = {5,6,7,8};\r\n');
+fprintf(fid,'Line Loop(3) = {11,12,13,-14};\r\n');
+fprintf(fid,'Line Loop(4) = {9};\r\n\r\n');
 
-%fprintf(fid,'//+\r\n');
+%Create Surfaces
+fprintf(fid,'// BooleanDifference cuts out the circle/interface from the domain\r\n');
+fprintf(fid,'Plane Surface(1) = {3};\r\n');
+fprintf(fid,'Plane Surface(2) = {4};\r\n');
+fprintf(fid,'BooleanDifference{ Surface{1}; Delete;}{ Surface{2}; Delete;}\r\n\r\n');
+fprintf(fid,'// This one cuts out the blades from the inner circle/interface\r\n');
+fprintf(fid,'Line Loop(6) = {10};\r\n');
+fprintf(fid,'Plane Surface(5) = {6};\r\n');
+fprintf(fid,'Plane Surface(6) = {1};\r\n');
+fprintf(fid,'Plane Surface(7) = {2};\r\n');
+fprintf(fid,'BooleanDifference{ Surface{5}; Delete;}{ Surface{6,7}; Delete;}\r\n\r\n');
+fprintf(fid,'// extrude to 3rd dimension\r\n');
+fprintf(fid,'Extrude {0, 0, 1} {Surface{1}; Surface{5}; Layers{1}; Recombine;}\r\n\r\n');
 
-fprintf(fid,'Circle(109) = {0, 0, 0, %.4f, 0, 2*Pi};\r\n',TurbineDiameter/2);
-
-fprintf(fid,'//+\r\n');
-
-%Create Line Loop and Surface for Box
-fprintf(fid,'Line Loop(5) = {110, 111, 112, -113};\r\n');
-fprintf(fid,'Plane Surface(1) = {5};\r\n');
-
-fprintf(fid,'//+\r\n');
-
-%Create Line Loop and Surface for Circle
-
-fprintf(fid,'Line Loop(6) = {109};\r\n');
-fprintf(fid,'Plane Surface(2) = {6};\r\n');
-
-fprintf(fid,'//+\r\n');
-
-fprintf(fid,'//+\r\n');
-
-%Subtract Circle from Box to get Static Surface
-fprintf(fid,'BooleanDifference{ Surface{1}; Delete;}{ Surface{2}; Delete;}\r\n');
-
-fprintf(fid,'//+\r\n');
-
-%Create Circle for Dynamic Surface
-fprintf(fid,'Circle(114) = {0, 0, 0, %.4f, 0, 2*Pi};\r\n',TurbineDiameter/2);
-fprintf(fid,'Line Loop(7) = {114};\r\n');
-fprintf(fid,'Plane Surface(5) = {7};\r\n');
-
-fprintf(fid,'//+\r\n');
-
-%Create Surfaces for Blades
-for i = 1:nBlades
-    fprintf(fid,'Plane Surface(%d) = {%d};\r\n',5+i,i);
-end 
-
-fprintf(fid,'//+\r\n');
-
-
-%Subtract Blades from Circle to Get Dynamic Surface
-fprintf(fid,'BooleanDifference{ Surface{5}; Delete;}{ Surface{');
-fprintf(fid,'%d, ',6:nBlades+4);
-fprintf(fid,'%d}; Delete;}\r\n',nBlades+5);
-
-fprintf(fid,'//+\r\n');
+%Create Physical Surfaces and Volumes
+fprintf(fid,'// Physical Surfaces are the named boundaries (patches)\r\n');
+fprintf(fid,'Physical Surface("Interface11") = {12};\r\n');
+fprintf(fid,'Physical Surface("Interface12") = {10};\r\n\r\n');
+fprintf(fid,'// sides of domain\r\n');
+fprintf(fid,'Physical Surface("InletP") = {6};\r\n');
+fprintf(fid,'Physical Surface("OutletP") = {9};\r\n\r\n');
+fprintf(fid,'// top and bottom of domain\r\n');
+fprintf(fid,'Physical Surface("Wall1s") = {7};\r\n');
+fprintf(fid,'Physical Surface("Wall2s") = {8};\r\n\r\n');
+fprintf(fid,'// Check FrontandBackF by ensuring there is nothing in the 3rd dimension\r\n');
+fprintf(fid,'Physical Surface("FrontandBackF") = {1,11,5,21};\r\n');
+fprintf(fid,'Physical Surface("BladeF") = {13:20};\r\n');
+fprintf(fid,'Physical Volume("Turbine") = {2};\r\n');
+fprintf(fid,'Physical Volume("Farfield") = {1};\r\n\r\n');
 
 %Create Boundary Layer
+fprintf(fid,'// settings for airfoil boundary layer\r\n');
 fprintf(fid,'Field[1] = BoundaryLayer;\r\n');
-fprintf(fid,'Field[1].EdgesList = {');
-fprintf(fid,'%d, ',1:nBlades*SplinesPerBlade-1);
-fprintf(fid,'%d};\r\n',nBlades*SplinesPerBlade);
-fprintf(fid,'Field[1].hwall_n = 1e-4;\r\n');
-fprintf(fid,'Field[1].thickness = 5e-3;\r\n');
-fprintf(fid,'Field[1].ratio = 1.1;\r\n');
+fprintf(fid,'Field[1].EdgesList = {1:8};\r\n');
+fprintf(fid,'Field[1].hwall_n = 1e-3;\r\n');
+fprintf(fid,'Field[1].thickness = 1.5e-2;\r\n');
+fprintf(fid,'Field[1].ratio = 1.05;\r\n');
 fprintf(fid,'Field[1].Quads = 1;\r\n');
-fprintf(fid,'BoundaryLayer Field = 1;\r\n');
+fprintf(fid,'BoundaryLayer Field = 1;\r\n\r\n');
 
+%TODO: Confirm this formula
+tf_num = ceil((ArcLength*c/.0015)/8);
 
-fprintf(fid,'//+\r\n');
+%Create Transfinite Lines (1D meshes)
+fprintf(fid,'// control points for mesh (blade and interface)\r\n');
+fprintf(fid,'// floor((arc length / 1.5mm)/ 8) -> Transfinite Line {1:8}\r\n');
+fprintf(fid,'Transfinite Line {1:8} = %d Using Progression 1;\r\n', tf_num);
+fprintf(fid,'Transfinite Line {9, 15} = 800 Using Progression 1;\r\n\r\n');
 
-%Make Transfinite Lines
-
-fprintf(fid,'Transfinite Line {');
-fprintf(fid,'%d, ',1:nBlades*SplinesPerBlade-1); 
-fprintf(fid,'%d} = %d Using Progression 1;\r\n',nBlades*SplinesPerBlade,ceil(BladeNodes/SplinesPerBlade));
-
-fprintf(fid,'Transfinite Line {109, 114} = %d Using Progression 1;\r\n',CircleNodes);
-
-fprintf(fid,'//+\r\n');
-
-%Extrude
-fprintf(fid,'Extrude {0, 0, 1} {Surface{1}; Surface{5}; Layers{1}; Recombine;}\r\n');
-
-fprintf(fid,'//+\r\n');
-
-fprintf(fid,'Physical Surface("Inlet") = {6};\r\n');
-fprintf(fid,'Physical Surface("Outlet") = {9};\r\n');
-fprintf(fid,'Physical Surface("Wall1") = {8};\r\n');
-fprintf(fid,'Physical Surface("Wall2") = {7};\r\n');
-fprintf(fid,'Physical Surface("FrontandBack") = {1, 5, 11, %d};\r\n',13+2*nBlades);
-fprintf(fid,'Physical Surface("Interface11") = {10};\r\n');
-fprintf(fid,'Physical Surface("Interface12") = {12};\r\n');
-fprintf(fid,'Physical Volume("Turbine") = {2};\r\n');
-fprintf(fid,'Physical Volume("Farfield") = {1};\r\n');
-
-
-fclose(fid);
+fprintf(fid,'// For more information on gmsh syntax, visit http://gmsh.info/doc/texinfo/gmsh.html');
+fclose('all');
 
 %% Plot
+if makefig
+    fprintf('Plotting Geometry...\n');
 
-% fprintf('Plotting Geometry...\n');
-% 
-% for i = 1:nBlades
-%     plot(bladeCoord{i}(1,:),bladeCoord{i}(2,:));
-%     hold on;
-% end
-% 
-% plot(boxPoints(:,1),boxPoints(:,2));
-% 
-% circleX = linspace(-TurbineDiameter/2,TurbineDiameter/2,100);
-% circleY = zeros(1,length(circleX));
-% for i = 1:length(circleX)
-%     circleY(i) = sqrt((TurbineDiameter/2)^2 - (circleX(i))^2);
-% end
-% plot(circleX,circleY,circleX,-circleY);
-% 
-% axis([boxPoints(1,1),boxPoints(4,1),boxPoints(1,2),boxPoints(2,2)]);
-% daspect([1 1 1]);
-% hold off;
+    for i = 1:nBlades
+        plot(bladeCoord{i}(1,:),bladeCoord{i}(2,:));
+        hold on;
+    end
+
+    boxPoints = [-15 -8; -15 8; 24 8; 24 -8];
+    plot(boxPoints(:,1),boxPoints(:,2));
+
+    circleX = linspace(-0.8,0.8,100);
+    circleY = zeros(1,length(circleX));
+    for i = 1:length(circleX)
+        circleY(i) = sqrt((0.8)^2 - (circleX(i))^2);
+    end
+    plot(circleX,circleY,circleX,-circleY);
+
+    axis([boxPoints(1,1),boxPoints(4,1),boxPoints(1,2),boxPoints(2,2)]);
+    daspect([1 1 1]);
+    hold off;
+end
 
 %% Mesh
 
 if mesh
+    meshname = filename(1:end-4);
     fprintf('Meshing Geometry...\n');
-    fprintf(strcat('Mesh filename will be "',filename,'.msh"\n'));
-    dos(strcat('gmsh ./',filename,' -3 -smooth 2 -clmax .5 -clscale .5 -o ./',filename,'.msh'));
+    fprintf(strcat('Mesh filename will be "',meshname,'.msh"\n'));
+    dos(strcat('gmsh ./geo_files/',filename,' -3 -smooth 2 -clmax .5 -clscale .5 -o ./',meshname,'.msh'));
 end
 
 fprintf('Finished!\n');
@@ -278,13 +192,10 @@ function[bladeCoord] = bladePrepare(c,D,beta,datafile,xshift,nBlades,rotDir)
 
 degShift = 360/nBlades;
 
-
-
 %import coordinates from data file
 profile = importdata(datafile);
 
 blade = c*(profile);
-
 
 %rotate first blade
 rot = [cosd(beta),-1*sind(beta);sind(beta),cosd(beta)];
@@ -307,8 +218,5 @@ for i = 1:nBlades-1
     axisRot = [cosd(degShift*i),-1*sind(degShift*i);sind(degShift*i),cosd(degShift*i)];
     bladeCoord{i+1} = round(axisRot*blade,6);
 end
-
-
-
 
 end

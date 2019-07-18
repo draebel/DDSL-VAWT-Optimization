@@ -11,7 +11,7 @@ R = 0.75 #m
 TSR_RANGE = [0.5, 6] #TSR ranges continuously from 0.5 to 6
 AOA_RANGE = [-10, 10] #AoA ranges continuously from -10 to 10
 
-with open("CaseList.txt", "w+") as f:
+with open("CaseList.csv", "w+", newline='') as f:
     writer = csv.writer(f)
     writer.writerow(["Name", "TSR", "AoA", "AngularSpeed"])
 
