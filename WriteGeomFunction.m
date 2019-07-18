@@ -2,9 +2,9 @@
 % gmsh ./[GeomName] -3 -smooth 2 -clmax .5 -clscale .5 -o ./[MeshName.msh]
 % gmsh ./GeomFixed.txt -3 -smooth 2 -clmax .5 -clscale .5 -o ./GeomFixed
 
-
 %Create a Mesh File for a Turbine for VAWT Optimization
 %format filename output like e434_tsr_3.5_aoa_-10.geo
+
 
 list = readtable('CaseList.csv');
 al_table = readtable('ArcLengths.csv');
@@ -30,7 +30,7 @@ fprintf(strcat('Filename will be "',filename,'"\n'));
 %% Parameters
 
 %TODO: Determine xshift
-c = 0.5; %Chord Length [m]
+c = 0.1; %Chord Length [m]
 D = 2*0.75; %Rotor Diameter [m]
 beta = -1*AoA; %Blade Pitch Angle (+ is leading edge inward) [degrees]
 xshift = 0.25*c; %Distance from leading edge to mounting point [m]
