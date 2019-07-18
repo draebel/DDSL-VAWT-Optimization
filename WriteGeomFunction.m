@@ -9,10 +9,12 @@
 list = readtable('CaseList.csv');
 al_table = readtable('ArcLengths.csv');
 len = size(list,1);
-for i = 1:3
+for i = 1:len
     al_row = strcmp(al_table.Name, list.Name{i}) == 1;
     arc_length = al_table.ArcLength(al_row);
     fprintf(strcat("Airfoil: ", list.Name{i}, ", TSR: %f, AoA: %f"), list.TSR(i), list.AoA(i));
+    fprintf('\n');
+    fprintf('%d of %d\n', i, len);
     WriteGeom(strcat('./cfd_control_points/', list.Name{i},'.csv'), list.TSR(i), list.AoA(i), arc_length);
 end
 
@@ -20,20 +22,18 @@ end
 function [] = WriteGeom(datafile, TSR, AoA, ArcLength)
 
 close all;
-clc;
-fprintf('Beginning to Write Geometry File.\n');
+fprintf('    Beginning to Write Geometry File.\n');
 
 filename = strcat(datafile(22:end-4), '_tsr_', num2str(TSR), '_aoa_', num2str(AoA), '.geo'); %Geometry Filename to export to
 
-fprintf(strcat('Filename will be "',filename,'"\n'));
+fprintf(strcat('    Filename will be "',filename,'"\n'));
 
 %% Parameters
 
-%TODO: Determine xshift
 c = 0.1; %Chord Length [m]
 D = 2*0.75; %Rotor Diameter [m]
 beta = -1*AoA; %Blade Pitch Angle (+ is leading edge inward) [degrees]
-xshift = 0.25*c; %Distance from leading edge to mounting point [m]
+xshift = 0.5*c; %Distance from leading edge to mounting point [m]
 direction = 1; %Rotation Direction (CCW = 1, CW = -1)
 mesh = false; %Mesh with gmsh when done
 makefig = false; %Plot figure when complete
@@ -41,10 +41,10 @@ makefig = false; %Plot figure when complete
 %% Create .geo File
 
 %Prepare Blade Coordinates
-fprintf('Preparing Turbine Coordinates...\n');
+fprintf('    Preparing Turbine Coordinates...\n');
 bladeCoord = bladePrepare(c,D,beta,datafile,xshift,2,direction);
 
-fprintf('Writing GMSH File...\n');
+fprintf('    Writing GMSH File...\n');
 
 %Create Header
 fid = fopen(strcat('./geo_files/', filename),'w');
@@ -137,7 +137,6 @@ fprintf(fid,'Field[1].ratio = 1.05;\r\n');
 fprintf(fid,'Field[1].Quads = 1;\r\n');
 fprintf(fid,'BoundaryLayer Field = 1;\r\n\r\n');
 
-%TODO: Confirm this formula
 tf_num = ceil((ArcLength*c/.0015)/8);
 
 %Create Transfinite Lines (1D meshes)
