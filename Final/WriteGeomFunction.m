@@ -257,6 +257,7 @@ profile = [x_raw, y_raw];
 
 corrected = false;
 if sum(profile(end,:) == profile(1,:)) == 2
+    %Trailing Edge Mesh Correction
     if abs(profile(end-1,2) - profile(2,2)) < 0.0002 && profile(end-1,1) == profile(2,1) && abs(profile(1,1) - profile(2,1)) < 0.005
         profile(1,:) = [];
         corrected = true;
