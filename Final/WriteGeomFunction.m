@@ -4,17 +4,20 @@
 %Create a Mesh File for a Turbine for VAWT Optimization
 %format filename output like e434_tsr_3.5_aoa_-10.geo
 
-
+corrected_list = [];
 list = readtable('CaseList.csv');
 for i = 1:size(list,1)
     fprintf(strcat("Airfoil: ", list.Name{i}, ", TSR: %f, AoA: %f"), list.TSR(i), list.AoA(i));
     fprintf('\n');
     fprintf('%d of %d\n', i, size(list,1));
-    WriteGeom(strcat('./DatFiles/', list.Name{i},'_dat'), list.TSR(i), list.AoA(i));
+    corrected = WriteGeom(strcat('./DatFiles/', list.Name{i},'_dat'), list.TSR(i), list.AoA(i));
+    if corrected
+        corrected_list = [corrected_list; i];
+    end
 end
 
 
-function [] = WriteGeom(datafile, TSR, AoA)
+function [corrected] = WriteGeom(datafile, TSR, AoA)
 
 close all;
 fprintf('    Beginning to Write Geometry File.\n');
@@ -25,7 +28,7 @@ fprintf(strcat('    Filename will be "',filename,'"\n'));
 
 %% Parameters
 
-c = 0.1; %Chord Length [m]
+c = 0.20; %Chord Length [m]
 D = 2*0.75; %Rotor Diameter [m]
 beta = -1*AoA; %Blade Pitch Angle (+ is leading edge inward) [degrees]
 xshift = 0.25*c; %Distance from leading edge to mounting point [m]
@@ -37,7 +40,7 @@ makefig = false; %Plot figure when complete
 
 %Prepare Blade Coordinates
 fprintf('    Preparing Turbine Coordinates...\n');
-[bladeCoord,ArcLength,TipLength, splinecut] = bladePrepare(c,D,beta,datafile,xshift,2,direction);
+[bladeCoord,ArcLength,TipLength,splinecut, corrected] = bladePrepare(c,D,beta,datafile,xshift,2,direction);
 
 fprintf('    Writing GMSH File...\n');
 
@@ -164,8 +167,8 @@ fprintf(fid,'Field[1] = BoundaryLayer;\r\n');
 fprintf(fid,'Field[1].EdgesList = {1:8};\r\n');
 fprintf(fid,'Field[1].hwall_n = 1e-3;\r\n');
 fprintf(fid,'Field[1].thickness = 1.5e-2;\r\n');
-% fprintf(fid,'Field[1].hwall_n = 1e-4;\r\n');
-% fprintf(fid,'Field[1].thickness = 1.5e-3;\r\n');
+%fprintf(fid,'Field[1].hwall_n = 1e-4;\r\n');
+%fprintf(fid,'Field[1].thickness = 1.5e-3;\r\n');
 fprintf(fid,'Field[1].ratio = 1.05;\r\n');
 fprintf(fid,'Field[1].Quads = 1;\r\n');
 fprintf(fid,'BoundaryLayer Field = 1;\r\n\r\n');
@@ -186,8 +189,6 @@ fprintf(fid,'// control points for mesh (blade and interface)\r\n');
 fprintf(fid,'// floor((arc length / 1.5mm)/ 6) -> Transfinite Line\r\n');
 fprintf(fid,'Transfinite Line {1,2,3,5,6,7} = %d Using Progression 1;\r\n', tf_num_arc);
 fprintf(fid,'Transfinite Line {4,8} = 1 Using Progression 1;\r\n');
-% fprintf(fid,'Transfinite Line {1, 3} = %d Using Progression 1;\r\n', tf_num_arc);
-% fprintf(fid,'Transfinite Line {2, 4} = %d Using Progression 1;\r\n', tf_num_tip);
 fprintf(fid,'Transfinite Line {9, 15} = 800 Using Progression 1;\r\n\r\n');
 
 fprintf(fid,'// For more information on gmsh syntax, visit http://gmsh.info/doc/texinfo/gmsh.html');
@@ -232,7 +233,7 @@ fprintf('Finished!\n');
 end
 %% Create and Position Blades fro Data File
 
-function[bladeCoord, arc_length, tip_length, splinecut] = bladePrepare(c,D,beta,datafile,xshift,nBlades,rotDir)
+function[bladeCoord, arc_length, tip_length, splinecut, corrected] = bladePrepare(c,D,beta,datafile,xshift,nBlades,rotDir)
 
 degShift = 360/nBlades;
 
@@ -254,9 +255,11 @@ end
 fclose("all");
 profile = [x_raw, y_raw];
 
+corrected = false;
 if sum(profile(end,:) == profile(1,:)) == 2
     if abs(profile(end-1,2) - profile(2,2)) < 0.0002 && profile(end-1,1) == profile(2,1) && abs(profile(1,1) - profile(2,1)) < 0.005
         profile(1,:) = [];
+        corrected = true;
     end
     profile(end,:) = [];
 end
