@@ -252,7 +252,7 @@ max_x = max(profile(:,1));
 if max_x ~= 1 || min_x ~= 0
     scale = max_x - min_x; 
     profile(:,1) = profile(:,1) - min_x; %Put leading edge at x=0
-    profile = profile*scale; %Scale so trailing edge is at x=1
+    profile = profile./scale; %Scale so trailing edge is at x=1
 end
 
 %Center leading edge at (0,0)
