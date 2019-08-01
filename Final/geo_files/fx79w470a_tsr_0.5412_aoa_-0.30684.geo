@@ -272,7 +272,7 @@ BoundaryLayer Field = 1;
 // control points for mesh (blade and interface)
 // floor((arc length / 1.5mm)/ 6) -> Transfinite Line
 Transfinite Line {1,2,3,5,6,7} = 38 Using Progression 1;
-Transfinite Line {4,8} = 1 Using Progression 1;
+Transfinite Line {4,8} = 3 Using Progression 1;
 Transfinite Line {9, 15} = 800 Using Progression 1;
 
 // For more information on gmsh syntax, visit http://gmsh.info/doc/texinfo/gmsh.html

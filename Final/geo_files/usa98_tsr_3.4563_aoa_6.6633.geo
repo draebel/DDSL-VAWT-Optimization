@@ -1,6 +1,6 @@
 SetFactory("OpenCASCADE");
 
-Point(1) = {0.074650, 0.720385, 0, 1.0};
+Point(1) = {0.074665, 0.720517, 0, 1.0};
 Point(2) = {0.060378, 0.727489, 0, 1.0};
 Point(3) = {0.045897, 0.732805, 0, 1.0};
 Point(4) = {0.031381, 0.737823, 0, 1.0};
@@ -25,7 +25,7 @@ Point(22) = {0.030128, 0.727096, 0, 1.0};
 Point(23) = {0.044992, 0.725058, 0, 1.0};
 Point(24) = {0.059751, 0.722125, 0, 1.0};
 Point(25) = {0.074493, 0.719044, 0, 1.0};
-Point(26) = {-0.074650, -0.720385, 0, 1.0};
+Point(26) = {-0.074665, -0.720517, 0, 1.0};
 Point(27) = {-0.060378, -0.727489, 0, 1.0};
 Point(28) = {-0.045897, -0.732805, 0, 1.0};
 Point(29) = {-0.031381, -0.737823, 0, 1.0};
@@ -52,16 +52,12 @@ Point(49) = {-0.059751, -0.722125, 0, 1.0};
 Point(50) = {-0.074493, -0.719044, 0, 1.0};
 
 // Lines: first blade (splines 1-4)
-Spline(1) = {1:8};
-Spline(2) = {8:17};
-Spline(3) = {17:25};
-Spline(4) = {25,1};
+Spline(1) = {1:25};
+Spline(2) = {25,1};
 
 // Lines: second blade (splines 5-8)
-Spline(5) = {26:33};
-Spline(6) = {33:42};
-Spline(7) = {42:50};
-Spline(8) = {50,26};
+Spline(3) = {26:50};
+Spline(4) = {50,26};
 
 // Outer domain (points 20001-4 and lines)
 Point(51) = {-13.50000000, -15.00000000, 0, 1.0};
@@ -78,8 +74,8 @@ Circle(9) = {0, 0, 0, 0.80000000, 0, 2*Pi};
 Circle(10) = {0, 0, 0, 0.80000000, 0, 2*Pi};
 
 // Loops collect Lines/Splines/etc (blade1, blade2, domain, first circle)
-Line Loop(1) = {1:4};
-Line Loop(2) = {5:8};
+Line Loop(1) = {1:2};
+Line Loop(2) = {3:4};
 Line Loop(3) = {11,12,13,-14};
 Line Loop(4) = {9};
 
@@ -111,14 +107,14 @@ Physical Surface("Wall1s") = {7};
 Physical Surface("Wall2s") = {8};
 
 // Check FrontandBackF by ensuring there is nothing in the 3rd dimension
-Physical Surface("FrontandBackF") = {1,11,5,21};
-Physical Surface("BladeF") = {13:20};
+Physical Surface("FrontandBackF") = {1,11,5,17};
+Physical Surface("BladeF") = {13:16};
 Physical Volume("Turbine") = {2};
 Physical Volume("Farfield") = {1};
 
 // settings for airfoil boundary layer
 Field[1] = BoundaryLayer;
-Field[1].EdgesList = {1:8};
+Field[1].EdgesList = {1:4};
 Field[1].hwall_n = 1e-3;
 Field[1].thickness = 1.5e-2;
 Field[1].ratio = 1.05;
@@ -126,9 +122,9 @@ Field[1].Quads = 1;
 BoundaryLayer Field = 1;
 
 // control points for mesh (blade and interface)
-// floor((arc length / 1.5mm)/ 6) -> Transfinite Line
-Transfinite Line {1,2,3,5,6,7} = 34 Using Progression 1;
-Transfinite Line {4,8} = 1 Using Progression 1;
+// floor((arc length / 1.5mm)/ 2) -> Transfinite Line
+Transfinite Line {1,3} = 103 Using Progression 1;
+Transfinite Line {2,4} = 2 Using Progression 1;
 Transfinite Line {9, 15} = 800 Using Progression 1;
 
 // For more information on gmsh syntax, visit http://gmsh.info/doc/texinfo/gmsh.html

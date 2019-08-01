@@ -64,16 +64,12 @@ Point(61) = {-0.067478, -0.726645, 0, 1.0};
 Point(62) = {-0.074978, -0.726562, 0, 1.0};
 
 // Lines: first blade (splines 1-4)
-Spline(1) = {1:8};
-Spline(2) = {8:23};
-Spline(3) = {23:31};
-Spline(4) = {31,1};
+Spline(1) = {1:31};
+Spline(2) = {31,1};
 
 // Lines: second blade (splines 5-8)
-Spline(5) = {32:39};
-Spline(6) = {39:54};
-Spline(7) = {54:62};
-Spline(8) = {62,32};
+Spline(3) = {32:62};
+Spline(4) = {62,32};
 
 // Outer domain (points 20001-4 and lines)
 Point(63) = {-13.50000000, -15.00000000, 0, 1.0};
@@ -90,8 +86,8 @@ Circle(9) = {0, 0, 0, 0.80000000, 0, 2*Pi};
 Circle(10) = {0, 0, 0, 0.80000000, 0, 2*Pi};
 
 // Loops collect Lines/Splines/etc (blade1, blade2, domain, first circle)
-Line Loop(1) = {1:4};
-Line Loop(2) = {5:8};
+Line Loop(1) = {1:2};
+Line Loop(2) = {3:4};
 Line Loop(3) = {11,12,13,-14};
 Line Loop(4) = {9};
 
@@ -123,14 +119,14 @@ Physical Surface("Wall1s") = {7};
 Physical Surface("Wall2s") = {8};
 
 // Check FrontandBackF by ensuring there is nothing in the 3rd dimension
-Physical Surface("FrontandBackF") = {1,11,5,21};
-Physical Surface("BladeF") = {13:20};
+Physical Surface("FrontandBackF") = {1,11,5,17};
+Physical Surface("BladeF") = {13:16};
 Physical Volume("Turbine") = {2};
 Physical Volume("Farfield") = {1};
 
 // settings for airfoil boundary layer
 Field[1] = BoundaryLayer;
-Field[1].EdgesList = {1:8};
+Field[1].EdgesList = {1:4};
 Field[1].hwall_n = 1e-3;
 Field[1].thickness = 1.5e-2;
 Field[1].ratio = 1.05;
@@ -138,9 +134,9 @@ Field[1].Quads = 1;
 BoundaryLayer Field = 1;
 
 // control points for mesh (blade and interface)
-// floor((arc length / 1.5mm)/ 6) -> Transfinite Line
-Transfinite Line {1,2,3,5,6,7} = 34 Using Progression 1;
-Transfinite Line {4,8} = 1 Using Progression 1;
+// floor((arc length / 1.5mm)/ 2) -> Transfinite Line
+Transfinite Line {1,3} = 103 Using Progression 1;
+Transfinite Line {2,4} = 2 Using Progression 1;
 Transfinite Line {9, 15} = 800 Using Progression 1;
 
 // For more information on gmsh syntax, visit http://gmsh.info/doc/texinfo/gmsh.html
