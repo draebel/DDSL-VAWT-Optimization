@@ -48,12 +48,16 @@ Point(45) = {0.033899, -0.727076, 0, 1.0};
 Point(46) = {-0.074635, -0.748473, 0, 1.0};
 
 // Lines: first blade (splines 1-4)
-Spline(1) = {1:23};
-Spline(2) = {23,1};
+Spline(1) = {1,2};
+Spline(2) = {2:22};
+Spline(3) = {22,23};
+Spline(4) = {23,1};
 
 // Lines: second blade (splines 5-8)
-Spline(3) = {24:46};
-Spline(4) = {46,24};
+Spline(5) = {24,25};
+Spline(6) = {25:45};
+Spline(7) = {45:46};
+Spline(8) = {46,24};
 
 // Outer domain (points 20001-4 and lines)
 Point(47) = {-13.50000000, -15.00000000, 0, 1.0};
@@ -70,8 +74,8 @@ Circle(9) = {0, 0, 0, 0.80000000, 0, 2*Pi};
 Circle(10) = {0, 0, 0, 0.80000000, 0, 2*Pi};
 
 // Loops collect Lines/Splines/etc (blade1, blade2, domain, first circle)
-Line Loop(1) = {1:2};
-Line Loop(2) = {3:4};
+Line Loop(1) = {1:4};
+Line Loop(2) = {5:8};
 Line Loop(3) = {11,12,13,-14};
 Line Loop(4) = {9};
 
@@ -103,14 +107,14 @@ Physical Surface("Wall1s") = {7};
 Physical Surface("Wall2s") = {8};
 
 // Check FrontandBackF by ensuring there is nothing in the 3rd dimension
-Physical Surface("FrontandBackF") = {1,11,5,17};
-Physical Surface("BladeF") = {13:16};
+Physical Surface("FrontandBackF") = {1,11,5,21};
+Physical Surface("BladeF") = {13:20};
 Physical Volume("Turbine") = {2};
 Physical Volume("Farfield") = {1};
 
 // settings for airfoil boundary layer
 Field[1] = BoundaryLayer;
-Field[1].EdgesList = {1:4};
+Field[1].EdgesList = {1:8};
 Field[1].hwall_n = 1e-3;
 Field[1].thickness = 1.5e-2;
 Field[1].ratio = 1.05;
@@ -119,8 +123,8 @@ BoundaryLayer Field = 1;
 
 // control points for mesh (blade and interface)
 // floor((arc length / 1.5mm)/ 2) -> Transfinite Line
-Transfinite Line {1,3} = 103 Using Progression 1;
-Transfinite Line {2,4} = 2 Using Progression 1;
+Transfinite Line {1,2,3,5,6,7} = 34 Using Progression 1;
+Transfinite Line {4,8} = 2 Using Progression 1;
 Transfinite Line {9, 15} = 800 Using Progression 1;
 
 // For more information on gmsh syntax, visit http://gmsh.info/doc/texinfo/gmsh.html
