@@ -4,21 +4,22 @@
 %Create a Mesh File for a Turbine for VAWT Optimization
 %GEO Filename Format: e434_tsr_3.5_aoa_-10.geo
 
-dos('mkdir truncated_control_points');
+
+dos('mkdir truncated_control_points_inter');
 list = readtable('CaseList.csv');
 dist_list = [];
 for i = 1:size(list,1)
     fprintf(strcat("Airfoil: ", list.Name{i}, ", TSR: %f, AoA: %f"), list.TSR(i), list.AoA(i));
     fprintf('\n');
     fprintf('%d of %d\n', i, size(list,1));
-    dist = WriteGeom(strcat('./truncated_control_points/',list.Name{i},'.csv'), list.TSR(i), list.AoA(i));
+    dist = WriteGeom(strcat('./truncated_control_points/',list.Name{i},'.csv'), list.TSR(i), list.AoA(i), list.Orientation(i));
     dist_list = [dist_list; dist];
 end
 
 fprintf('Finished!\n');
 
 
-function [dist] = WriteGeom(datafile, TSR, AoA)
+function [dist] = WriteGeom(datafile, TSR, AoA, orient)
 
 close all;
 fprintf('    Beginning to Write Geometry File.\n');
@@ -41,12 +42,12 @@ makefig = false; %Plot figure when complete
 
 %Prepare Blade Coordinates
 fprintf('    Preparing Turbine Coordinates...\n');
-[bladeCoord,ArcLength,TipLength,splinecut,dist] = bladePrepare(c,D,beta,datafile,xshift,2,direction);
+[bladeCoord,ArcLength,TipLength,splinecut,dist] = bladePrepare(c,D,beta,datafile,xshift,2,direction,orient);
 
 fprintf('    Writing Geometry File...\n');
 
 %Create Header
-fid = fopen(strcat('./geo_files/', filename),'w');
+fid = fopen(strcat('./geo_files_inter/', filename),'w');
 fprintf(fid,'SetFactory("OpenCASCADE");\r\n\r\n');
 
 numPoints = size(bladeCoord{1},2);
@@ -150,7 +151,8 @@ if numPoints > 35
     fprintf(fid,'Transfinite Line {4,8} = %d Using Progression 1;\r\n', tf_num_tip);
     fprintf(fid,'Transfinite Line {9, 15} = 800 Using Progression 1;\r\n\r\n');
 else
-    % Write Splines (2 Splines Each)
+    % Write Splines (2 Splines Each) (Fewer splines used to prevent
+    % overfitting when fewer control points are used)
     fprintf(fid, '\r\n// Lines: first blade (splines 1-4)\r\n');
     fprintf(fid, 'Spline(1) = {%d:%d};\r\n',1,numPoints);
     fprintf(fid, 'Spline(2) = {%d,%d};\r\n\r\n',numPoints,1);
@@ -270,7 +272,7 @@ if mesh
     meshname = filename(1:end-4);
     fprintf('Meshing Geometry...\n');
     fprintf(strcat('Mesh filename will be "',meshname,'.msh"\n'));
-    dos(strcat('gmsh ./geo_files/',filename,' -3 -smooth 2 -clmax .25 -o ./',meshname,'.msh'));
+    dos(strcat('gmsh ./geo_files_with_flip/',filename,' -3 -smooth 2 -clmax .25 -format msh3 -o ./',meshname,'.msh'));
 end
 
 
@@ -278,7 +280,7 @@ end
 end
 %% Create and Position Blades fro Data File
 
-function[bladeCoord, arc_length, tiplength, splinecut, dist] = bladePrepare(c,D,beta,datafile,xshift,nBlades,rotDir)
+function[bladeCoord, arc_length, tiplength, splinecut, dist] = bladePrepare(c,D,beta,datafile,xshift,nBlades,rotDir,orient)
 
 degShift = 360/nBlades;
 
@@ -289,6 +291,8 @@ profile = importdata(datafile);
 if profile(1,1) < profile(2,1) || profile(end,1) < profile(end-1,1)
     error('Not Correctly Oriented!')
 end
+
+profile(:,2) = profile(:,2)*orient;
 
 %Scale Airfoil to an x range of 0 to 1
 max_x = max(profile(:,1));
