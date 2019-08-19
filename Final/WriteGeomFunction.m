@@ -5,7 +5,7 @@
 %GEO Filename Format: e434_tsr_3.5_aoa_-10.geo
 
 
-dos('mkdir truncated_control_points_inter');
+dos('mkdir truncated_control_points');
 list = readtable('CaseList.csv');
 dist_list = [];
 for i = 1:size(list,1)
@@ -47,7 +47,7 @@ fprintf('    Preparing Turbine Coordinates...\n');
 fprintf('    Writing Geometry File...\n');
 
 %Create Header
-fid = fopen(strcat('./geo_files_inter/', filename),'w');
+fid = fopen(strcat('./geo_files_with_flip/', filename),'w');
 fprintf(fid,'SetFactory("OpenCASCADE");\r\n\r\n');
 
 numPoints = size(bladeCoord{1},2);
