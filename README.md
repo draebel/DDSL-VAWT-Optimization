@@ -20,3 +20,8 @@ This file must be run in the directory associated with [DDSL experiment 1](https
 
 ## FakeValidationData.sh (bash)
 This script will produce "fake" CFD data for validating the neural network. This script calls `FakeDataWriterSinWave.py` which will generate fake CFD data in the form of a squared sine wave with a random magnitude. It then calls `SplitFakeData.py` which generates separate CSV files for each case, and lastly calls `process_cfd_data.py` to extract mean and standard deviation statistics, and to normalize the data for input into the neural network. These files can be used to "train" the neural network to ensure it is working properly.
+
+## postprocess/ (matlab, to be python)
+This script takes the results of the OpenFOAM processing and converts it into torques at every angle.
+
+Haris originally wrote this in matlab, which we will convert to Python.
