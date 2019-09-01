@@ -1,0 +1,15 @@
+# use the scratch dir to copy files.
+# the home dir on comet is really small!
+# compress files to send faster (scp many files can be slow)
+cd ..
+tar -czf TODOJOBNAME.tar.gz TODOJOBNAME
+scp TODOJOBNAME.tar.gz kmarwaha@comet.sdsc.xsede.org:/oasis/scratch/comet/kmarwaha/temp_project/vawtopt/cases/
+rm -rf TODOJOBNAME.tar.gz
+cd TODOJOBNAME
+
+rm -rf processor*
+rm -rf *.pos
+rm -rf *.msh
+cd constant
+rm -rf polyMesh
+cd ..

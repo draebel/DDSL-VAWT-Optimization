@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#SBATCH --job-name="TODOJOBNAME"
+#SBATCH --partition=compute
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=24
+#SBATCH --export=ALL
+#SBATCH -t 48:00:00
+#SBATCH --no-requeue
+
+/oasis/scratch/comet/kmarwaha/temp_project/vawtopt/cases/TODOJOBNAME/Allrun > /dev/null

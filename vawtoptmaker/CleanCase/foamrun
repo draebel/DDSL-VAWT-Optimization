@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# gmsh can't be run in docker container
+/Applications/Gmsh.app/Contents/MacOS/gmsh ./TODOFILENAME -3 -smooth 2 -clmax .25 -o ./Turbine.msh
+# for mac only
+echo '$End' >> Turbine.msh
