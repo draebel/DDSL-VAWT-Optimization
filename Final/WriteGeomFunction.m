@@ -8,7 +8,7 @@
 %dos('mkdir truncated_control_points');
 list = readtable('CaseList.csv');
 
-for i = 1:1000
+for i = 669
     fprintf(strcat("Airfoil: ", list.Name{i}, ", TSR: %f, AoA: %f"), list.TSR(i), list.AoA(i));
     fprintf('\n');
     fprintf('%d of %d\n', i, size(list,1));
@@ -49,13 +49,25 @@ fid = fopen(strcat('./geo_files/', filename),'w');
 fprintf(fid,'SetFactory("OpenCASCADE");\r\n\r\n');
 
 numPoints = size(bladeCoord{1},2);
+repeatIndex = [];
+
+for i = 1:numPoints-1
+    if bladeCoord{1}(1,i) == bladeCoord{1}(1,i+1) && bladeCoord{1}(2,i) == bladeCoord{1}(2,i+1)
+        repeatIndex = [repeatIndex, i+1];
+    end
+end
+for i = repeatIndex
+    bladeCoord{1}(:,repeatIndex) = [];
+    bladeCoord{2}(:,repeatIndex) = [];
+end
+numPoints = numPoints - size(repeatIndex,2);
 
 % Write Blade Coordinates
 for j = 1:numPoints
-    fprintf(fid,'Point(%d) = {%.6f, %.6f, 0, 1.0};\r\n',j,bladeCoord{1}(1,j),bladeCoord{1}(2,j));
+    fprintf(fid,'Point(%d) = {%f, %f, 0, 1.0};\r\n',j,bladeCoord{1}(1,j),bladeCoord{1}(2,j));
 end
 for j = 1:numPoints
-    fprintf(fid,'Point(%d) = {%.6f, %.6f, 0, 1.0};\r\n',j+numPoints,bladeCoord{2}(1,j),bladeCoord{2}(2,j));
+    fprintf(fid,'Point(%d) = {%f, %f, 0, 1.0};\r\n',j+numPoints,bladeCoord{2}(1,j),bladeCoord{2}(2,j));
 end
 
 if numPoints > 35
