@@ -1,0 +1,37 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  5                                     |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// https://cfd.direct/openfoam/user-guide/v3-function-objects/
+// https://www.cfd-online.com/Forums/openfoam-post-processing/109063-how-calculate-torque-simulation-result.html
+
+forces
+{
+    type        forces;
+
+    libs ( "libforces.so" );
+
+    writeControl    adjustableRunTime;
+
+    writeInterval   TODOTIMESTEP;
+
+    log         yes;
+
+    patches     (Blade);
+    rho         rhoInf;
+    pName       p;
+    UName       U;
+    log         true;
+    rhoInf      1;
+    pRef	0;
+
+    CofR        (0 0 0);    // Rotation around centre line of propeller
+    pitchAxis   (0 0 1);
+    pRef            0;
+}
+
+
+// ************************************************************************* //

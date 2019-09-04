@@ -1,0 +1,41 @@
+#!/bin/sh
+
+cd ${0%/*} || exit 1    # Run from this directory
+
+. $WM_PROJECT_DIR/bin/tools/RunFunctions
+
+
+CASE_DIR=/oasis/scratch/comet/kmarwaha/temp_project/vawtopt/cases/TODOJOBNAME
+
+# this script gets run by sbatch/squeue, so we get the job ID
+a="$(squeue -n TODOJOBNAME -u kmarwaha)"
+
+SLURM_JOBID=$(echo $a | awk '{print $9}')
+
+# To make it more efficient
+# we only have one node (computer) for the whole case
+# So we can copy to SSD and run calculations there
+NODE_DIR=/scratch/$USER/$SLURM_JOBID
+
+mkdir $NODE_DIR/TestCase
+
+cp -r $CASE_DIR/* $NODE_DIR/TestCase/
+
+timeout 47h mpirun -bind-to-core -np 24 pimpleFoam -case $NODE_DIR/TestCase -parallel | tee $NODE_DIR/TestCase/pimplefoam.log
+
+mkdir $CASE_DIR/postProcessing
+
+cp -r $NODE_DIR/TestCase/postProcessing/* $CASE_DIR/postProcessing/
+
+# puts the history back into case dir
+tar -zcvf $CASE_DIR/simhist.tar.gz $NODE_DIR/TestCase/
+
+cp -r $NODE_DIR/TestCase/pimplefoam.log $CASE_DIR/
+
+cd $NODE_DIR/TestCase/
+
+$NODE_DIR/TestCase/animate.sh
+
+cp -r $NODE_DIR/TestCase/*.ogv $CASE_DIR/
+
+rm -rf $NODE_DIR/TestCase
