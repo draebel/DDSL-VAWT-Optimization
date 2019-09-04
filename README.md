@@ -29,7 +29,14 @@ To make the cases, you can `mkdir cases` in that directory, then run
 ```
 ls  ~/Desktop/DDSL-VAWT-Optimization/Final/geo_files/ | while read -r line; do ./make_case.sh ~/Desktop/DDSL-VAWT-Optimization/Final/geo_files/$line; done
 ```
-Then you can run `./foamrun` in each repository to generate the mesh. Running `./foamrun_docker` will convert the mesh to OpenFOAM, and `./foamrun_final` will send the script to Comet.
+Then you can run `./foamrun` in each repository to generate the mesh. Usually I run them in parallel. Be careful, some things might get printed to stderr even if you redirect stdout.
+
+Running `./foamrun_docker` will convert the mesh to OpenFOAM.
+```
+ls |  while read -r line; do cd $line; pwd; ./foamrun_docker >>  ../../foamrun_docker.logs; cd ..; done
+```
+
+and `./foamrun_final` will send the script to Comet.
 
 
 
